@@ -2,20 +2,26 @@ package com.epam.rd.autotasks;
 import java.util.*;
 
 public class Words {
-    public String countWords(List<String> lines) {
+    public static String countWords(List<String> text) {
         Map<String, Integer> wordCount = new HashMap<>();
 
         // Iterate over each line of text
-        for (String line : lines) {
-            // Split the line into words using regex with the UNICODE_CHARACTER_CLASS flag
-            String[] words = line.split("\\P{L}+", -1);
+        for (String line : text) {
+            // Split the line into words using whitespace as delimiter
+            String[] words = line.split("\\s+");
 
+            // Count the occurrence of each word
             for (String word : words) {
-                // Ignore words with less than 4 letters
-                if (word.length() >= 4) {
-                    String lowercaseWord = word.toLowerCase();
-                    int count = wordCount.getOrDefault(lowercaseWord, 0);
-                    wordCount.put(lowercaseWord, count + 1);
+                // Remove non-alphabetic characters from the word
+                String cleanedWord = word.replaceAll("[^\\p{L}]", "");
+
+                // Exclude words with less than 4 letters
+                if (cleanedWord.length() >= 4) {
+                    // Convert the word to lowercase
+                    cleanedWord = cleanedWord.toLowerCase();
+
+                    // Update the word count
+                    wordCount.put(cleanedWord, wordCount.getOrDefault(cleanedWord, 0) + 1);
                 }
             }
         }
@@ -29,26 +35,31 @@ public class Words {
             }
         }
 
-        // Sort the words by count and then alphabetically
-        List<Map.Entry<String, Integer>> sortedWords = new ArrayList<>(wordCount.entrySet());
-        sortedWords.sort(new Comparator<Map.Entry<String, Integer>>() {
+        // Sort the word count entries by amount and then alphabetically
+        List<Map.Entry<String, Integer>> sortedEntries = new ArrayList<>(wordCount.entrySet());
+        Collections.sort(sortedEntries, new Comparator<Map.Entry<String, Integer>>() {
             @Override
-            public int compare(Map.Entry<String, Integer> a, Map.Entry<String, Integer> b) {
-                int countComparison = Integer.compare(b.getValue(), a.getValue());
-                if (countComparison == 0) {
-                    return a.getKey().compareTo(b.getKey());
-                } else {
-                    return countComparison;
+            public int compare(Map.Entry<String, Integer> entry1, Map.Entry<String, Integer> entry2) {
+                int result = Integer.compare(entry2.getValue(), entry1.getValue()); // Sort by amount in descending order
+                if (result == 0) {
+                    result = entry1.getKey().compareTo(entry2.getKey()); // Sort alphabetically if amounts are equal
                 }
+                return result;
             }
         });
 
-        // Generate the statistics string
+        // Build the statistics string
         StringBuilder statistics = new StringBuilder();
-        for (Map.Entry<String, Integer> entry : sortedWords) {
+        for (Map.Entry<String, Integer> entry : sortedEntries) {
             statistics.append(entry.getKey()).append(" - ").append(entry.getValue()).append("\n");
+        }
+
+        // Remove the trailing newline character if the statistics string is not empty
+        if (statistics.length() > 0) {
+            statistics.setLength(statistics.length() - 1);
         }
 
         return statistics.toString();
     }
 }
+
